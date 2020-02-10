@@ -13,7 +13,6 @@
 
 from pathlib import Path
 from PIL import Image, ImageOps
-from zipfile import ZipFile
 import os, errno
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import imshow
@@ -30,19 +29,16 @@ import time
 
 
 # In[15]:
-
+SYN_DATASET = 'Dataset_3'
+REAL_DATASET = 'AdobeVFRDataset\\real'
+REAL_TRAIN_DATASET = 'preprocessed\\real_train'
+SYN_TRAIN_DATASET = 'preprocessed\\syn_train'
 
 file_path = Path('E:\FontRecognition')
 dataset_path = file_path.joinpath('Dataset_Final')
 
-real_train_dataset = dataset_path.joinpath('real_train') 
-syn_train_dataset = dataset_path.joinpath('syn_train')
-
-real_train_zip_path = dataset_path.joinpath("real_train.zip")
-syn_train_zip_path = dataset_path.joinpath("syn_train.zip")
-
-real_train_zip = ZipFile(real_train_zip_path, 'w')
-syn_train_zip = ZipFile(syn_train_zip_path, 'w')
+real_train_dataset = dataset_path.joinpath(REAL_TRAIN_DATASET) 
+syn_train_dataset = dataset_path.joinpath(SYN_TRAIN_DATASET)
 
 # # Defining locations
 
@@ -50,8 +46,8 @@ syn_train_zip = ZipFile(syn_train_zip_path, 'w')
 
 
 #Data files
-dataset3_path = file_path.joinpath('Dataset_3')
-realvfr_path = file_path.joinpath('AdobeVFRDataset\\real')
+dataset3_path = file_path.joinpath(SYN_DATASET)
+realvfr_path = file_path.joinpath(REAL_DATASET)
 
 
 # ## Preprocess Functions
@@ -172,13 +168,11 @@ def worker_1(file, process_id):
     try:
         result_imgs.extend(pil_img)
         for i in range(len(result_imgs)):
-            # result_imgs[i].save(f"{real_train_dataset}\{i+1}{file}")
-            real_train_zip.write(real_train_zip_path.joinpath(f"{real_train_dataset}\{i+1}{file}"))
+            result_imgs[i].save(f"{real_train_dataset}\{i+1}{file}")
     except TypeError:
         # print("Only one element")
         result_imgs.append(pil_img)
-        # pil_img.save(f"{real_train_dataset.joinpath(file)}")
-        real_train_zip.write(real_train_zip_path.joinpath(f"{real_train_dataset}\{i+1}{file}"))
+        pil_img.save(f"{real_train_dataset.joinpath(file)}")
     
     return f"Worker AdobeVFR {process_id} finished"
 
@@ -187,7 +181,7 @@ def worker_2(dir, process_id):
     dir_path = dataset3_path.joinpath(dir)
     files = os.listdir(dir_path)
     image_counter = 1
-    for z in range(len(files[:3])):
+    for z in range(len(files[:5])):
 
         result_imgs = []
 
@@ -267,26 +261,23 @@ def main():
             pass
     print(f"AdobeVFR Processes Complete {processed_counter} has been processed")
 
-    real_train_zip.close()
-
     # Preprocess and moving part 2
     # For Synthetic Dataset
     processed_counter_2 = 0
     print("Start processing Synth")
-    # dirs = os.listdir(dataset3_path)
-    # with concurrent.futures.ProcessPoolExecutor() as executor:
-    #     for dir in dirs[:]:
-    #         process = executor.submit(worker_2, dir, process_id_counter)
-    #         processes.append(process)
-    #         process_id_counter +=1
+    dirs = os.listdir(dataset3_path)
+    with concurrent.futures.ProcessPoolExecutor() as executor:
+        for dir in dirs[:5]:
+            process = executor.submit(worker_2, dir, process_id_counter)
+            processes.append(process)
+            process_id_counter +=1
 
-    #     for p in concurrent.futures.as_completed(processes):
-    #         print(p.result())
-    #         pass
+        for p in concurrent.futures.as_completed(processes):
+            print(p.result())
+            pass
 
     print(f"AdobeVFR Processes Complete {processed_counter} has been processed")
     print(f"Syn processes complete {processed_counter_2} directories has been processed")
-    syn_train_zip.close()
 
 
 
