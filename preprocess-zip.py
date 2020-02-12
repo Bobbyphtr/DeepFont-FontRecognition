@@ -6,7 +6,15 @@
 
 # get_ipython().system('pip install Pillow')
 # get_ipython().system('pip install opencv-python')
+"""
+This somewhat resulting the zipfile become corrupted. It is true that zipfile is not threadsafe not 
+recommended for multiprocesses.
 
+Error rose when unpacking or accessing the zipfile using google collab,
+
+Header : b'PK\x05\x06'
+BadZipFile: Bad magic number for file header
+"""
 
 # In[2]:
 
@@ -266,10 +274,6 @@ def main():
         for p in concurrent.futures.as_completed(processes):
             imgs, file = p.result()
             for img in imgs:
-                """
-                This somewhat resulting the zipfile become corrupted. It is true that zipfile is not threadsafe not 
-                recommended for multiprocesses.
-                """
                 random_num = random.sample(range(1, 99999), 1)
                 file_path = real_train_dataset.joinpath(f"{random_num}{file}")
                 img.save(file_path)

@@ -34,6 +34,9 @@ REAL_DATASET = 'AdobeVFRDataset\\real'
 REAL_TRAIN_DATASET = 'preprocessed\\real_train'
 SYN_TRAIN_DATASET = 'preprocessed\\syn_train'
 
+FILE_LIMIT = 5
+DIR_LIMIT = 3
+
 file_path = Path('E:\FontRecognition')
 dataset_path = file_path.joinpath('Dataset_Final')
 
@@ -59,12 +62,6 @@ def pil_image(img_path):
     pil_im = Image.open(img_path).convert('L')
 #     imshow(np.asarray(pil_im))
     return pil_im
-
-
-# cropped_image = img.crop((left, top, right, bottom))
-# cropped_image = ImageOps.grayscale(cropped_image)
-# display(cropped_image)
-# imshow(np.asarray(cropped_image))
 
 dim = 105
 def crop(pil_img):
@@ -158,7 +155,11 @@ def gradient_fill(image):
     laplacian = cv2.resize(laplacian, (105, 105))
     return laplacian
 
-# This is worker for Adobe VFR Dataset
+"""
+This is worker for Adobe VFR Dataset
+
+"""
+
 def worker_1(file, process_id):
     result_imgs = []
 
@@ -176,12 +177,15 @@ def worker_1(file, process_id):
     
     return f"Worker AdobeVFR {process_id} finished"
 
-# This is worker for Synthetic Data
+"""
+This is worker for Synthetic Data
+
+"""
 def worker_2(dir, process_id):
     dir_path = dataset3_path.joinpath(dir)
     files = os.listdir(dir_path)
     image_counter = 1
-    for z in range(len(files[:5])):
+    for z in range(len(files[:FILE_LIMIT])):
 
         result_imgs = []
 
@@ -250,7 +254,7 @@ def main():
     print("Start processing AdobeVFR")
     files = os.listdir(realvfr_path)
     with concurrent.futures.ProcessPoolExecutor() as executor:
-        for file in files[:5]:
+        for file in files[:FILE_LIMIT]:
             process = executor.submit(worker_1, file, process_id_counter)
             processes.append(process)
             process_id_counter +=1
@@ -267,7 +271,7 @@ def main():
     print("Start processing Synth")
     dirs = os.listdir(dataset3_path)
     with concurrent.futures.ProcessPoolExecutor() as executor:
-        for dir in dirs[:5]:
+        for dir in dirs[:DIR_LIMIT]:
             process = executor.submit(worker_2, dir, process_id_counter)
             processes.append(process)
             process_id_counter +=1
