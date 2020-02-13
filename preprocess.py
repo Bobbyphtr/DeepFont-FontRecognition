@@ -29,13 +29,13 @@ import time
 
 
 # In[15]:
-SYN_DATASET = 'Dataset_3'
-REAL_DATASET = 'AdobeVFRDataset\\real'
+SYN_DATASET = 'Dataset_Final\\Dataset_3'
+REAL_DATASET = 'Dataset_Final\\real'
 REAL_TRAIN_DATASET = 'preprocessed\\real_train'
 SYN_TRAIN_DATASET = 'preprocessed\\syn_train'
 
-FILE_LIMIT = 5
-DIR_LIMIT = 3
+FILE_LIMIT = 2
+DIR_LIMIT = 2
 
 file_path = Path('E:\FontRecognition')
 dataset_path = file_path.joinpath('Dataset_Final')
@@ -57,7 +57,7 @@ realvfr_path = file_path.joinpath(REAL_DATASET)
 
 # In[5]:
 
-
+Image.MAX_IMAGE_PIXELS = 1000000000 # SILENCE PIL IMAGE COMPRESSION BOMB WARNING
 def pil_image(img_path):
     pil_im = Image.open(img_path).convert('L')
 #     imshow(np.asarray(pil_im))
@@ -170,10 +170,14 @@ def worker_1(file, process_id):
         result_imgs.extend(pil_img)
         for i in range(len(result_imgs)):
             result_imgs[i].save(f"{real_train_dataset}\{i+1}{file}")
+        print(f"Removed {file}")
+        os.remove(realvfr_path.joinpath(file)) # remove original image
     except TypeError:
         # print("Only one element")
         result_imgs.append(pil_img)
         pil_img.save(f"{real_train_dataset.joinpath(file)}")
+        print(f"Removed {file}")
+        os.remove(realvfr_path.joinpath(file)) # Remove original image
     
     return f"Worker AdobeVFR {process_id} finished"
 
@@ -186,6 +190,7 @@ def worker_2(dir, process_id):
     files = os.listdir(dir_path)
     image_counter = 1
     for z in range(len(files[:FILE_LIMIT])):
+        img_path = dir_path.joinpath(files[z])
 
         result_imgs = []
 
@@ -205,10 +210,11 @@ def worker_2(dir, process_id):
                     # Add Noise
                     temp = noise_image(temp)
                     #Save for real dataset
-                    temp.save(f"{real_train_dataset}\\{image_counter} {dir}.jpg")
+                    temp.save(f"{real_train_dataset}\\{image_counter}_{dir}_{files[z]}.jpg")
                     # Save for synth dataset + label
-                    temp.save(f"{dirName}\\{image_counter} {dir}.jpg")
+                    temp.save(f"{dirName}\\{image_counter}_{dir}_{files[z]}.jpg")
                     image_counter+=1
+                os.remove(img_path) # Delete original file
             except TypeError:
                 # If only have one image result
                 # print("Only one element")
@@ -216,12 +222,13 @@ def worker_2(dir, process_id):
                 # Add Noise
                 pil_img = noise_image(pil_img)
                 # Save for real dataset
-                pil_img.save(f"{real_train_dataset}\\{image_counter} {dir}.jpg")
+                pil_img.save(f"{real_train_dataset}\\{image_counter}_{dir}_{files[z]}.jpg")
                 # Save for synth dataset + label
-                pil_img.save(f"{dirName}\\{image_counter} {dir}.jpg")
+                pil_img.save(f"{dirName}\\{image_counter}_{dir}_{files[z]}.jpg")
                 image_counter+=1
+                os.remove(img_path) # Delete original file
         else:    
-            # print("Directory " , dirName ,  " already exists")
+            print("Directory " , dirName ,  " already exists")
             try:
                 result_imgs.extend(pil_img)
                 for i in range(len(result_imgs)):
@@ -229,20 +236,22 @@ def worker_2(dir, process_id):
                     # Add Noise
                     temp = noise_image(temp)
                     #Save for real dataset
-                    temp.save(f"{real_train_dataset}\\{image_counter} {dir}.jpg")
+                    temp.save(f"{real_train_dataset}\\{image_counter}_{dir}_{files[z]}.jpg")
                     # Save for synth dataset + label
-                    temp.save(f"{dirName}\\{image_counter} {dir}.jpg")
+                    temp.save(f"{dirName}\\{image_counter}_{dir}_{files[z]}.jpg")
                     image_counter+=1
+                os.remove(img_path) # Delete original file
             except TypeError:
                 # print("Only one element")
                 result_imgs.append(pil_img)
                 # Add Noise
                 pil_img = noise_image(pil_img)
                 # Save for real dataset
-                pil_img.save(f"{real_train_dataset}\\{image_counter} {dir}.jpg")
+                pil_img.save(f"{real_train_dataset}\\{image_counter}_{dir}_{files[z]}.jpg")
                 # Save for synth dataset + label
-                pil_img.save(f"{dirName}\\{image_counter} {dir}.jpg")
+                pil_img.save(f"{dirName}\\{image_counter}_{dir}_{files[z]}.jpg")
                 image_counter+=1
+                os.remove(img_path) # Delete original file
     return f"Worker Synth {len(files)} has been processed by {process_id}"
 
 def main():
@@ -260,28 +269,30 @@ def main():
             process_id_counter +=1
 
         for p in concurrent.futures.as_completed(processes):
-            # print(p.result())
+            print(p.result())
             processed_counter+=1
             pass
+
     print(f"AdobeVFR Processes Complete {processed_counter} has been processed")
 
     # Preprocess and moving part 2
     # For Synthetic Dataset
-    processed_counter_2 = 0
+    processes = []
+    process_id_counter_2 = 0
     print("Start processing Synth")
     dirs = os.listdir(dataset3_path)
     with concurrent.futures.ProcessPoolExecutor() as executor:
         for dir in dirs[:DIR_LIMIT]:
-            process = executor.submit(worker_2, dir, process_id_counter)
+            process = executor.submit(worker_2, dir, process_id_counter_2)
             processes.append(process)
-            process_id_counter +=1
+            process_id_counter_2 +=1
 
         for p in concurrent.futures.as_completed(processes):
             print(p.result())
             pass
 
-    print(f"AdobeVFR Processes Complete {processed_counter} has been processed")
-    print(f"Syn processes complete {processed_counter_2} directories has been processed")
+    # print(f"AdobeVFR Processes Complete {processed_counter} has been processed")
+    print(f"Syn processes complete {process_id_counter_2} directories has been processed")
 
 
 
