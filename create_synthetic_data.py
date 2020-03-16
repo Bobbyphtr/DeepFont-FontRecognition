@@ -13,8 +13,10 @@ FONT_SPECIFIER_FAMILY_ID = 1
 
 # file_path = Path('E:\Google Drive\Colab Notebooks')
 file_path = Path('E:\FontRecognition')
-font_path = file_path.joinpath('Fonts_Final')
-dataset_path = file_path.joinpath('Dataset_3')
+font_path = file_path.joinpath('Fonts_500')
+dataset_path = file_path.joinpath('Dataset_Final\\Dataset_test')
+
+total_images_per_font = 20
 
 def shortName( font ):
     """Get the short name from the font's names table"""
@@ -61,14 +63,14 @@ def generate_images(fonts, process_id):
 
             trdg cannot random cs.
             """
-            command_str  = f"trdg --output_dir \"{synthetic_font_path}\" -c {1000} -b 3 -bl 3 -rbl -k 6 -rk -tc #000000,#4A4A4A -f 105 -cs 3 -ft \"{font_type_used}\""
+            command_str  = f"trdg --output_dir \"{synthetic_font_path}\" -c {total_images_per_font} -b 3 -bl 3 -rbl -k 6 -rk -tc #000000,#4A4A4A -f 105 -cs 3 -ft \"{font_type_used}\""
             os.system('cmd /c '+command_str)
         except OSError as e:
             if e.errno == errno.EEXIST:
                 total_image = len(glob.glob1(synthetic_font_path, '*.jpg'))
-                if total_image < 1000:
-                    print(f"{font_name} lack of {(1000 - total_image)}, Generating lacked image")
-                    command_str  = f"trdg --output_dir \"{synthetic_font_path}\" -c {1000} -b 3 -bl 3 -rbl -k 6 -rk -tc #000000,#4A4A4A -f 105 -cs 3 -ft \"{font_type_used}\""
+                if total_image < total_images_per_font:
+                    print(f"{font_name} lack of {(total_images_per_font - total_image)}, Generating lacked image")
+                    command_str  = f"trdg --output_dir \"{synthetic_font_path}\" -c {total_images_per_font} -b 3 -bl 3 -rbl -k 6 -rk -tc #000000,#4A4A4A -f 105 -cs 3 -ft \"{font_type_used}\""
                     os.system('cmd /c '+command_str)
                
         # print(font_name)
@@ -95,17 +97,17 @@ def check_all_directory(fonts, process_id):
             # print(f"{font_name} is {total_image}")
             all_folder_count+=1
             all_image_count+=total_image
-            if total_image  < 1000:
-                print(f"{font_name} lack of {(1000 - total_image)} on {font}")
-                print(f"Generating {font_name} : {(1000 - total_image)} with {font}")
-                command_str  = f"trdg --output_dir \"{synthetic_font_path}\" -c {1000 - total_image} -b 3 -bl 3 -rbl -k 6 -rk -tc #000000,#4A4A4A -f 105 -cs 3 -ft \"{font_type_used}\""
+            if total_image  < total_images_per_font:
+                print(f"{font_name} lack of {(total_images_per_font - total_image)} on {font}")
+                print(f"Generating {font_name} : {(total_images_per_font - total_image)} with {font}")
+                command_str  = f"trdg --output_dir \"{synthetic_font_path}\" -c {total_images_per_font - total_image} -b 3 -bl 3 -rbl -k 6 -rk -tc #000000,#4A4A4A -f 105 -cs 3 -ft \"{font_type_used}\""
                 os.system('cmd /c '+command_str)
                 is_cleared = False
-            elif total_image > 1000:
-                print(f"{font_name} is over {(total_image - 1000)}")
-                print(f"Removing {(total_image - 1000)} in {str(synthetic_font_path)}")
+            elif total_image > total_images_per_font:
+                print(f"{font_name} is over {(total_image - total_images_per_font)}")
+                print(f"Removing {(total_image - total_images_per_font)} in {str(synthetic_font_path)}")
                 thefiles = os.listdir(synthetic_font_path)
-                for file in sample(thefiles,(total_image - 1000)):
+                for file in sample(thefiles,(total_image - total_images_per_font)):
                     # print(synthetic_font_path +"'\\"+ file)
                     os.remove(synthetic_font_path +"\\"+ file)
                 is_cleared = False
