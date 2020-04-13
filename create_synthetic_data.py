@@ -14,9 +14,9 @@ FONT_SPECIFIER_FAMILY_ID = 1
 # file_path = Path('E:\Google Drive\Colab Notebooks')
 file_path = Path('E:\FontRecognition')
 font_path = file_path.joinpath('Fonts_500')
-dataset_path = file_path.joinpath('Dataset_Final\\Dataset_test')
+dataset_path = file_path.joinpath('Dataset_Final\\Dataset_test_50')
 
-total_images_per_font = 20
+total_images_per_font = 50
 
 def shortName( font ):
     """Get the short name from the font's names table"""

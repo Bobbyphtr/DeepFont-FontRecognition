@@ -3,9 +3,9 @@ from fontTools import ttLib
 from pathlib import Path
 import time
 import os,errno, glob
+import pickle
 
-
-font_path = Path('E:\\FontRecognition\\Fonts_Final\\')
+font_path = Path('E:\\FontRecognition\\Fonts_500\\')
 
 FONT_SPECIFIER_NAME_ID = 4
 FONT_SPECIFIER_FAMILY_ID = 1
@@ -26,8 +26,8 @@ def shortName(font):
         if name and family: break
     return name, family
 
-def duplicate(src, dest) :
-    copy(src, dest)
+# def duplicate(src, dest) :
+#     copy(src, dest)
 
 
 def main():
@@ -43,21 +43,12 @@ def main():
     font_dict = {}
     for font in all_fonts:
         tt = ttLib.TTFont(font)
-        font_dict[shortName(tt)[0]] = font
+        font_dict[shortName(tt)[0]] = font.name
 
-    # Get all 500 fonts
-    files = os.listdir('E:\\FontRecognition\\Dataset_Final\\Dataset_3_500_2\\')
-    filtered_dict = {}
-    for font_name in font_dict:
-        if font_name in files:
-            filtered_dict[font_name] = font_dict[font_name]
-
-    # Copy all of the 500 font to destination
-    destination_dir = 'E:\\FontRecognition\\Fonts_500\\'
-    for font in filtered_dict:
-        duplicate(filtered_dict[font], destination_dir)
-
-    print(os.listdir(destination_dir))
+    print(font_dict)
+    print(len(font_dict))
+    with open('E:\\FontRecognition\\App\\Model\\font_dict', 'wb') as file:
+        pickle.dump(font_dict, file)
     
     
 if __name__ == "__main__":

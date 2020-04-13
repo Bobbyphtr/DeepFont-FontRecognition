@@ -1,16 +1,3 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[8]:
-
-
-# get_ipython().system('pip install Pillow')
-# get_ipython().system('pip install opencv-python')
-
-
-# In[2]:
-
-
 from pathlib import Path
 from PIL import Image, ImageOps, ImageFile
 import os, errno
@@ -25,57 +12,36 @@ from shutil import copy
 import concurrent.futures
 from multiprocessing import Value
 import time
-# get_ipython().run_line_magic('matplotlib', 'inline')
 
-
-# In[15]:
 REAL_DATASET = 'Dataset_Final\\real_500'
-DATASET_3_500 = 'Dataset_Final\\Dataset_3_500_2'
+SYN_DATASET = 'Dataset_Final\\Dataset_3_500_2'
 
-REAL_TRAIN_DATASET = 'preprocessed\\real_train_500_2'
-SYN_TRAIN_DATASET = 'preprocessed\\syn_train_500_2'
-
+REAL_TRAIN_FOLDER = 'preprocessed\\real_train_500_2_2'
+SYN_TRAIN_FOLDER = 'preprocessed\\syn_train_500_2'
+# This is for test only
 FILE_LIMIT = 5
 DIR_LIMIT = 2
 
 file_path = Path('E:\FontRecognition')
 dataset_path = file_path.joinpath('Dataset_Final')
 
-real_train_dataset = dataset_path.joinpath(REAL_TRAIN_DATASET) 
-syn_train_dataset = dataset_path.joinpath(SYN_TRAIN_DATASET)
-
-# # Defining locations
-
-# In[4]:
-
+real_train_dataset = dataset_path.joinpath(REAL_TRAIN_FOLDER) 
+syn_train_dataset = dataset_path.joinpath(SYN_TRAIN_FOLDER)
 
 #Data files
-dataset3_500_path = file_path.joinpath(DATASET_3_500)
+dataset3_500_path = file_path.joinpath(SYN_DATASET)
 realvfr_path = file_path.joinpath(REAL_DATASET)
-
-
-# ## Preprocess Functions
-
-# In[5]:
 
 Image.MAX_IMAGE_PIXELS = 1000000000 # SILENCE PIL IMAGE COMPRESSION BOMB WARNING
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 def pil_image(img_path):
     pil_im = Image.open(img_path).convert('L')
-#     imshow(np.asarray(pil_im))
     return pil_im
 
 dim = 105
 def crop(pil_img):
     width, height = pil_img.size
-    # print(f"{width, height} Cropped")
-#     width = img.shape[1]
-#     x0 = int(width/2 - 52.5)
-#     x1= int(width/2 + 52.5)
-#     y0 = int(0)
-#     y1 = int(105)
-#     img = img[y0:y1, x0:x1, :]
     left = 0
     right = dim
     top = 0
@@ -93,17 +59,6 @@ def crop(pil_img):
 
 def crop_resize(pil_img):
     (width, height) = pil_img.size
-    # print(width, height)
-#     if width < 105 or height < 105:
-#         img = pil_img.resize((105,105), Image.ANTIALIAS)
-#         print("resize")
-#     elif width > 500 or height > 500:
-#         # Squeezing operation
-#         img = crop(squeezing_operation(pil_img))
-#         print("scale down and squeeze")
-#     else:
-#         img = crop(pil_img)
-#         print("crop")
     img = crop(squeezing_operation(pil_img))
     return img
 
@@ -113,9 +68,6 @@ def squeezing_operation(pil_img):
     wsize = int((float(pil_img.size[0])*float(hpercent)))
     temp_img = pil_img.resize((wsize,baseheight), Image.ANTIALIAS)
     return temp_img
-
-def rgb2gray(pil_img):
-    return np.dot(rgb[...,:3], [0.2989, 0.5870, 0.1140])
 
 def noise_image(pil_im):
     # Adding Noise to image
@@ -129,40 +81,10 @@ def noise_image(pil_im):
     noise_img=noise_img.resize((105,105))
     return noise_img
 
-def blur_image(pil_im):
-    #Adding Blur to image 
-    blur_img = pil_im.filter(ImageFilter.GaussianBlur(radius=3)) # ouput
-    #imshow(blur_img)
-    blur_img=blur_img.resize((105,105))
-    return blur_img
-
-def affine_rotation(img):
-    
-    #img=cv2.imread(img_path,0)
-    rows, columns = img.shape
-
-    point1 = np.float32([[10, 10], [30, 10], [10, 30]])
-    point2 = np.float32([[20, 15], [40, 10], [20, 40]])
-
-    A = cv2.getAffineTransform(point1, point2)
-
-    output = cv2.warpAffine(img, A, (columns, rows))
-    affine_img = PIL.Image.fromarray(np.uint8(output)) # affine rotated output
-    #imshow(output)
-    affine_img=affine_img.resize((105,105))
-    return affine_img
-
-def gradient_fill(image):
-    #image=cv2.imread(img_path,0)
-    laplacian = cv2.Laplacian(image,cv2.CV_64F)
-    laplacian = cv2.resize(laplacian, (105, 105))
-    return laplacian
-
 """
 This is worker for Adobe VFR Dataset
 
 """
-
 def worker_1(file, process_id):
     print(f"Reading {file}")
 
@@ -185,6 +107,7 @@ def worker_1(file, process_id):
         os.remove(realvfr_path.joinpath(file)) # Remove original image
     
     return f"Worker AdobeVFR {process_id} finished"
+
 
 """
 This is worker for Synthetic Data
@@ -265,7 +188,7 @@ def worker_2(dir, process_id):
     return f"Worker Synth {len(files)} has been processed by {process_id}"
 
 def main():
-    # # Preprocess and moving part 1
+    # Preprocess and moving part 1
     # For AdobeVFR Real Dataset
     processes = []
     process_id_counter = 1
@@ -308,11 +231,7 @@ def main():
         for p in concurrent.futures.as_completed(processes):
             print(p.result())
             pass
-
-    # print(f"AdobeVFR Processes Complete {processed_counter} has been processed")
     print(f"Syn processes complete {process_id_counter_2} directories has been processed")
-
-
 
 if __name__ == "__main__":
     t1 = time.perf_counter()
