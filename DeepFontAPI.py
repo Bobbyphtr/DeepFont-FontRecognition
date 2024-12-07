@@ -40,8 +40,6 @@ def load_cnn():
 model = load_cnn()
 model.summary()
 
-
-
 test_data_path = 'E:\\FontRecognition\\Dataset_Final\\preprocessed\\dataset_test_50_RBKN\\'
 batch_size = 128
 test_datagen = ImageDataGenerator(rescale=1. / 255)
